@@ -6,18 +6,18 @@ Gem::Specification.new do |spec|
   spec.name = "mysql_dump_to_json"
   spec.version = MysqlDumpToJson::VERSION
   spec.authors = ["Michael McIver"]
-  spec.email = ["mmciver@motologic.com"]
+  spec.email = ["mike.mciver@insedra.com"]
 
-  spec.summary = "TODO: Write a short summary, because RubyGems requires one."
-  spec.description = "TODO: Write a longer description or delete this line."
-  spec.homepage = "TODO: Put your gem's website or public repo URL here."
+  spec.summary = "Convert MySQL dump file to JSON without mysql dependency"
+  spec.description = "Self contained minimal dependency gem designed to convert a MySQL dump file to JSON without having to pass through a MySQL server"
+  spec.homepage = "https://github.com/mmciver/mysql_dump_to_json"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["allowed_push_host"] = "TODO: Set to your gem server 'https://example.com'"
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "TODO: Put your gem's public repo URL here."
-  spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
+  spec.metadata["source_code_uri"] = "https://github.com/mmciver/mysql_dump_to_json"
+  spec.metadata["changelog_uri"] = "https://github.com/mmciver/mysql_dump_to_json/blob/main/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
