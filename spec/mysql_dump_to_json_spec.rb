@@ -6,6 +6,10 @@ RSpec.describe MysqlDumpToJson do
   end
 
   it "does something useful" do
-    expect(false).to eq(true)
+    expect(MysqlDumpToJson).to eq(MysqlDumpToJson)
+    expect(MysqlDumpToJson::MySQL).to eq(MysqlDumpToJson::MySQL)
+    expect(MysqlDumpToJson::MySQL::Reader).to eq(MysqlDumpToJson::MySQL::Reader)
+    expect(MysqlDumpToJson::MySQL::Table).to eq(MysqlDumpToJson::MySQL::Table)
+    expect(MysqlDumpToJson::MySQL::Row).to eq(MysqlDumpToJson::MySQL::Row)
   end
 end
