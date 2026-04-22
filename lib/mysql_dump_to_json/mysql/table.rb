@@ -23,7 +23,6 @@ module MysqlDumpToJson
       def description
         {
           name: name,
-          fields: fields,
           num_rows: rows.length,
           first_row: rows.first
         }

@@ -54,9 +54,9 @@ module MysqlDumpToJson
           case line.strip
           when /^CREATE +TABLE +/i
             table[:name] = table_name_from_create(line)
-          when /^PRIMARY +KEY/i, /^FOREIGN +KEY/i
+          when /^PRIMARY +KEY/i, /^FOREIGN +KEY/i, /^KEY/i
             table[:keys] << line.strip.delete_suffix(',')
-          when ');'
+          when ');', /ENGINE=/i, /^CONSTRAINT/i, /^ENGINE/i
           else
             table[:fields] << field_from_line(line)
           end
@@ -97,18 +97,83 @@ module MysqlDumpToJson
         values_str = sql_statement.split(/ VALUES +/i).last
         values_ary = values_str[1..-3].split(/\)\s*,\s*\(/)
         values_ary.map do |values_row|
-          parse_values_row_with_escape(values_row)
+          parse_values_row_with_escape(values_row.delete_prefix('(').delete_suffix(')'))
         end
       end
 
+      # Simply splitting on commas gets most rows, but fails when there are commas in quoted text.
+      # When an opening quote is found, but not a closing quote, look ahead in the array until the
+      # closing quote is found to merge those values back together with the consumed comma
       def parse_values_row_with_escape(values_row)
-        values = values_row.scan(/('.*?'(?=,)|NULL)/).flatten
+        simple_split = values_row.split(',')
+        values = []
+        merged_indexes = []
+        simple_split.each_with_index do |value, index|
+          next if merged_indexes.include?(index)
+
+          if value_not_quoted?(value)
+            values << value_to_numeric(value)
+          elsif value_complete_quote?(value)
+            values << value
+          elsif value_open_end_quote?(value)
+            end_of_quote_index = index_of_closing_quote_value(simple_split, index)
+            values << simple_split[index..end_of_quote_index].join(',')
+            merged_indexes |= (index..end_of_quote_index).to_a
+          else
+            binding.pry
+          end
+        end
+        remove_quotes_from_values(values)
+      end
+
+      def remove_quotes_from_values(values)
         values.map do |value|
-          value.delete_suffix("'") # Remove the enacapsulating quotes
-               .delete_prefix("'")
-               .gsub("\\'", "'") # Remove the double escaped interior single quotes
+          if value.is_a?(String)
+            value.delete_suffix("'") # Remove the enacapsulating quotes
+                 .delete_prefix("'")
+                 .gsub("\\'", "'") # Remove the double escaped interior single quotes
+          else
+            value
+          end
         end
       end
+
+      def value_to_numeric(value)
+        return nil if value == 'NULL'
+        return value.to_i if value.to_i.to_s == value
+        return value.to_f if value.to_f.to_s == value
+
+        binding.pry
+      end
+
+      def value_not_quoted?(value)
+        value.count("'").zero?
+      end
+
+      def value_complete_quote?(value)
+        value[0] == "'" &&
+            value[-1] == "'"
+      end
+
+      def value_open_end_quote?(value)
+        value[0] == "'" &&
+            value[-1] != "'"
+      end
+
+      def value_open_start_quote?(value)
+        value[0] != "'" &&
+            value[-1] == "'"
+      end
+
+      def index_of_closing_quote_value(ary, start_at_index)
+        ary.each_with_index do |value, index|
+          next if index < start_at_index
+          return index if value_open_start_quote?(value)
+        end
+      end
+
+
+
 
       # Compressing the source into distinct SQL statements
 
