@@ -94,8 +94,8 @@ module MysqlDumpToJson
       end
 
       def value_chunks_from_insert(sql_statement)
-        values_str = sql_statement.split(/ VALUES +/i).last
-        values_ary = values_str[1..-3].split(/\)\s*,\s*\(/)
+        values_str = sql_statement.split(/ VALUES(\b| |\n)+\(/i).last
+        values_ary = values_str.delete_suffix(";").split(/\)\s*,\s*\(/)
         values_ary.map do |values_row|
           parse_values_row_with_escape(values_row.delete_prefix('(').delete_suffix(')'))
         end
@@ -120,7 +120,7 @@ module MysqlDumpToJson
             values << simple_split[index..end_of_quote_index].join(',')
             merged_indexes |= (index..end_of_quote_index).to_a
           else
-            binding.pry
+            raise("Misread SQL row. MysqlDumpToJson gem needs a bug fix to handle.\n  Row attempting to be parsed: #{values_row}")
           end
         end
         remove_quotes_from_values(values)
@@ -143,7 +143,8 @@ module MysqlDumpToJson
         return value.to_i if value.to_i.to_s == value
         return value.to_f if value.to_f.to_s == value
 
-        binding.pry
+        # Doesn't appear to actually be a numeric
+        "'#{value}'"
       end
 
       def value_not_quoted?(value)
